@@ -22,7 +22,7 @@ const signupData = {
     email: '',
     password: '',
     nickname: '',
-    profileImageUrl: undefined,
+    profileImagePath: undefined,
 };
 
 const getSignupData = () => {
@@ -37,11 +37,11 @@ const getSignupData = () => {
 
 const sendSignupData = async () => {
     const { passwordCheck, ...props } = signupData;
-    if (localStorage.getItem('profileImageUrl')) {
-        props.profileImageUrl = localStorage.getItem('profileImageUrl');
+    if (localStorage.getItem('profileImagePath')) {
+        props.profileImagePath = localStorage.getItem('profileImagePath');
     }
 
-    if (props.password > MAX_PASSWORD_LENGTH) {
+    if (props.password.length > MAX_PASSWORD_LENGTH) {
         Dialog('비밀번호', '비밀번호는 20자 이하로 입력해주세요.');
         return;
     }
@@ -50,7 +50,7 @@ const sendSignupData = async () => {
 
     // 응답이 성공적으로 왔을 경우
     if (status === HTTP_CREATED) {
-        localStorage.removeItem('profileImageUrl');
+        localStorage.removeItem('profileImagePath');
         location.href = '/html/login.html';
     } else {
         if (code === 'ALREADY_EXIST_EMAIL') {
@@ -62,7 +62,7 @@ const sendSignupData = async () => {
         } else {
             Dialog('회원 가입 실패', '잠시 뒤 다시 시도해 주세요', () => {});
         }
-        localStorage.removeItem('profileImageUrl');
+        localStorage.removeItem('profileImagePath');
         location.href = '/html/signup.html';
     }
 };
@@ -247,10 +247,7 @@ const uploadProfileImage = () => {
             try {
                 const { ok, data } = await fileUpload(formData);
                 if (!ok) throw new Error('서버 응답 오류');
-                localStorage.setItem(
-                    'profileImageUrl',
-                    data.profileImageUrl,
-                );
+                localStorage.setItem('profileImagePath', data.filePath);
             } catch (error) {
                 console.error('업로드 중 오류 발생:', error);
             }

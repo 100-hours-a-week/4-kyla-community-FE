@@ -12,8 +12,20 @@ export const getServerUrl = () => {
 
     const host = window.location.hostname;
     return host.includes('localhost')
-        ? 'http://localhost:3000'
-        : `http://${host}:3000`;
+        ? 'http://localhost:8080'
+        : `http://${host}:8080`;
+};
+
+export const saveAuthData = data => {
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('userId', String(data.userId));
+};
+
+export const clearAuthData = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
 };
 
 export const resolveImageUrl = (url, fallback = null) => {
@@ -23,26 +35,59 @@ export const resolveImageUrl = (url, fallback = null) => {
 };
 
 export const serverSessionCheck = async () => {
-    const res = await fetch(`${getServerUrl()}/v1/auth/check`, {
+    const accessToken = localStorage.getItem('accessToken');
+    const userId = localStorage.getItem('userId');
+    if (!accessToken || !userId) {
+        return new Response(
+            JSON.stringify({
+                success: false,
+                status: 401,
+                message: '로그인이 필요합니다.',
+                data: null,
+            }),
+            {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' },
+            },
+        );
+    }
+
+    return fetch(`${getServerUrl()}/users/${userId}`, {
         method: 'GET',
-        credentials: 'include',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
     });
-    return res;
 };
 
 export const authCheck = async () => {
     const HTTP_OK = 200;
     const response = await serverSessionCheck();
-    if (!response || response.status !== HTTP_OK)
+    if (!response || response.status !== HTTP_OK) {
+        clearAuthData();
         location.href = '/html/login.html';
+    }
     return response;
 };
 
 export const authCheckReverse = async () => {
-    const response = await serverSessionCheck();
-    if (response && response.ok) {
-        location.href = '/';
+    if (
+        !localStorage.getItem('accessToken') ||
+        !localStorage.getItem('userId')
+    ) {
+        return;
     }
+
+    try {
+        const response = await serverSessionCheck();
+        if (response && response.ok) {
+            location.href = '/';
+            return;
+        }
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+    }
+    clearAuthData();
 };
 // 이메일 유효성 검사
 export const validEmail = email => {

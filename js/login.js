@@ -2,6 +2,7 @@ import Header from '../component/header/header.js';
 import {
     authCheckReverse,
     prependChild,
+    saveAuthData,
     validEmail,
 } from '../utils/function.js';
 import { userLogin } from '../api/loginRequest.js';
@@ -22,7 +23,23 @@ const loginClick = async () => {
     const { id: email, password } = loginData;
     const helperTextElement = document.querySelector('.helperText');
 
-    const { ok, status, code } = await userLogin(email, password);
+    if (!validEmail(email)) {
+        updateHelperText(
+            helperTextElement,
+            '*올바른 이메일 주소를 입력해주세요.',
+        );
+        return;
+    }
+
+    if (password.length < MAX_PASSWORD_LENGTH) {
+        updateHelperText(
+            helperTextElement,
+            `*비밀번호를 ${MAX_PASSWORD_LENGTH}자 이상 입력해주세요.`,
+        );
+        return;
+    }
+
+    const { ok, status, code, data } = await userLogin(email, password);
     if (!ok) {
         updateHelperText(
             helperTextElement,
@@ -41,6 +58,7 @@ const loginClick = async () => {
         return;
     }
     updateHelperText(helperTextElement);
+    saveAuthData(data);
 
     location.href = '/html/index.html';
 };
@@ -58,13 +76,13 @@ const observeSignupData = () => {
             : '*올바른 이메일 주소 형식을 입력해주세요. (예: example@example.com)',
     );
 
-    button.disabled = !(
+    const isValidInput = Boolean(
         email &&
-        isValidEmail &&
+            isValidEmail &&
         password &&
-        password.length >= MAX_PASSWORD_LENGTH
+            password.length >= MAX_PASSWORD_LENGTH,
     );
-    button.style.backgroundColor = button.disabled ? '#ACA0EB' : '#7F6AEE';
+    button.style.backgroundColor = isValidInput ? '#7F6AEE' : '#ACA0EB';
 };
 
 const eventSet = () => {
@@ -127,7 +145,6 @@ const init = async () => {
     observeSignupData();
     prependChild(document.body, Header('커뮤니티', 0));
     eventSet();
-    localStorage.clear();
 };
 
 init();
