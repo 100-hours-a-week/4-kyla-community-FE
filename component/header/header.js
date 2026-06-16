@@ -40,7 +40,9 @@ const Header = (
     title,
     leftBtn = 0,
     profileImage = null,
+    options = {},
 ) => {
+    const { showLogin = false } = options;
     let leftBtnElement;
     let rightBtnElement;
     let headerElement;
@@ -72,13 +74,18 @@ const Header = (
         const Drop = headerDropdownMenu();
         Drop.classList.add('none');
 
-        profileElement.addEventListener('click', () => {
+        profileElement.addEventListener('click', event => {
             Drop.classList.toggle('none');
             event.stopPropagation();
         });
 
         rightBtnElement.appendChild(profileElement);
         rightBtnElement.appendChild(Drop);
+    } else if (showLogin) {
+        rightBtnElement = document.createElement('a');
+        rightBtnElement.classList.add('loginLink');
+        rightBtnElement.href = '/html/login.html';
+        rightBtnElement.textContent = '로그인';
     }
 
     h1Element = document.createElement('h1');

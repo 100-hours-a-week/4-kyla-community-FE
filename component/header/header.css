@@ -2,7 +2,7 @@ header {
     width: 100%;
     display: grid;
     grid-template-areas: 'lbtn title rbtn';
-    grid-template-columns: 40px 1fr 40px;
+    grid-template-columns: 72px 1fr 72px;
 
     align-items: center;
     justify-content: center;
@@ -39,7 +39,30 @@ header .back {
 
 header .profile {
     grid-area: rbtn;
+    justify-self: end;
     position: relative;
+}
+
+header .loginLink {
+    grid-area: rbtn;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background-color: #aca0eb;
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+header .loginLink:hover {
+    background-color: #7f6aee;
 }
 
 header .profile img {

@@ -1,11 +1,15 @@
 import BoardItem from '../component/board/boardItem.js';
 import Dialog from '../component/dialog/dialog.js';
 import Header from '../component/header/header.js';
-import { authCheck, getServerUrl, prependChild, resolveImageUrl } from '../utils/function.js';
+import {
+    clearAuthData,
+    prependChild,
+    resolveImageUrl,
+    serverSessionCheck,
+} from '../utils/function.js';
 import { getPosts, searchPosts } from '../api/indexRequest.js';
 
 const DEFAULT_PROFILE_IMAGE = '../public/image/profile/default.jpg';
-const HTTP_NOT_AUTHORIZED = 401;
 const SCROLL_THRESHOLD = 0.9;
 const INITIAL_OFFSET = 5;
 const ITEMS_PER_LOAD = 5;
@@ -147,25 +151,34 @@ const addInfinityScrollEvent = () => {
     });
 };
 
-const init = async () => {
+const getAuthenticatedProfileImageUrl = async () => {
     try {
-        const response = await authCheck();
-        const data = await response.json();
-        if (response.status === HTTP_NOT_AUTHORIZED) {
-            window.location.href = '/html/login.html';
-            return;
+        const response = await serverSessionCheck();
+        if (!response.ok) {
+            clearAuthData();
+            return null;
         }
 
-        const profileImageUrl = resolveImageUrl(
-            data.data.profileImageUrl,
+        const body = await response.json();
+        return resolveImageUrl(
+            body.data && body.data.profileImageUrl,
             DEFAULT_PROFILE_IMAGE,
         );
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        clearAuthData();
+        return null;
+    }
+};
 
-        prependChild(
-            document.body,
-            Header('Community', 0, profileImageUrl),
-        );
+const init = async () => {
+    const profileImageUrl = await getAuthenticatedProfileImageUrl();
+    prependChild(
+        document.body,
+        Header('Community', 0, profileImageUrl, { showLogin: true }),
+    );
 
+    try {
         updateSortVisibility();
         await loadBoardItems({ reset: true });
 
