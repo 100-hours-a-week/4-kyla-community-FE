@@ -52,7 +52,7 @@ export const serverSessionCheck = async () => {
         );
     }
 
-    return fetch(`${getServerUrl()}/users/${userId}`, {
+    return fetch(`${getServerUrl()}/v1/users/${userId}`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${accessToken}`,
