@@ -12,14 +12,15 @@ export const parseJsonSafe = async response => {
 
 export const requestJson = async (url, options = {}) => {
     try {
-        const headers = new Headers(options.headers || {});
+        const { skipAuth = false, ...fetchOptions } = options;
+        const headers = new Headers(fetchOptions.headers || {});
         const accessToken = localStorage.getItem('accessToken');
-        if (accessToken && !headers.has('Authorization')) {
+        if (!skipAuth && accessToken && !headers.has('Authorization')) {
             headers.set('Authorization', `Bearer ${accessToken}`);
         }
 
         const response = await fetch(url, {
-            ...options,
+            ...fetchOptions,
             headers,
         });
         const body = await parseJsonSafe(response);

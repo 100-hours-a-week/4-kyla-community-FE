@@ -4,6 +4,7 @@ import { requestJson } from '../utils/request.js';
 export const userSignup = async data => {
     const result = await requestJson(`${getServerUrl()}/v1/users`, {
         method: 'POST',
+        skipAuth: true,
         headers: {
             'Content-Type': 'application/json',
         },
@@ -17,6 +18,7 @@ export const checkEmail = async email => {
         `${getServerUrl()}/v1/users/email?email=${encodeURIComponent(email)}`,
         {
             method: 'GET',
+            skipAuth: true,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -30,6 +32,7 @@ export const checkNickname = async nickname => {
         `${getServerUrl()}/v1/users/nickname?nickname=${encodeURIComponent(nickname)}`,
         {
             method: 'GET',
+            skipAuth: true,
             headers: {
                 'Content-Type': 'application/json',
             },

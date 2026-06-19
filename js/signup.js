@@ -17,6 +17,9 @@ import {
 const MAX_PASSWORD_LENGTH = 20;
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
+const HTTP_BAD_REQUEST = 400;
+const HTTP_FORBIDDEN = 403;
+const HTTP_CONFLICT = 409;
 
 const signupData = {
     email: '',
@@ -46,19 +49,25 @@ const sendSignupData = async () => {
         return;
     }
     // signupData를 서버로 전송
-    const { status, code } = await userSignup(props);
+    const { status, code, body } = await userSignup(props);
 
     // 응답이 성공적으로 왔을 경우
     if (status === HTTP_CREATED) {
         localStorage.removeItem('profileImagePath');
         location.href = '/html/login.html';
     } else {
-        if (code === 'ALREADY_EXIST_EMAIL') {
-            Dialog('회원 가입 실패', '이미 사용 중인 이메일입니다.');
-        } else if (code === 'ALREADY_EXIST_NICKNAME') {
-            Dialog('회원 가입 실패', '이미 사용 중인 닉네임입니다.');
-        } else if (code === 'INVALID_INPUT') {
+        if (status === HTTP_CONFLICT) {
+            Dialog(
+                '회원 가입 실패',
+                body?.message || '이미 사용 중인 이메일 또는 닉네임입니다.',
+            );
+        } else if (status === HTTP_BAD_REQUEST || code === 'INVALID_INPUT') {
             Dialog('회원 가입 실패', '입력값을 확인해주세요.');
+        } else if (status === HTTP_FORBIDDEN) {
+            Dialog(
+                '회원 가입 실패',
+                '요청이 차단되었습니다. 접속 주소를 확인해주세요.',
+            );
         } else {
             Dialog('회원 가입 실패', '잠시 뒤 다시 시도해 주세요', () => {});
         }
@@ -107,8 +116,11 @@ const inputEventHandler = async (event, uid) => {
             if (status === HTTP_OK) {
                 helperElement.textContent = '';
                 isComplete = true;
-            } else {
+            } else if (status === HTTP_CONFLICT) {
                 helperElement.textContent = '*중복된 이메일 입니다.';
+            } else {
+                helperElement.textContent =
+                    '*이메일 확인 중 오류가 발생했습니다.';
             }
         }
         if (isComplete) {
@@ -179,8 +191,11 @@ const inputEventHandler = async (event, uid) => {
             if (status === HTTP_OK) {
                 helperElement.textContent = '';
                 isComplete = true;
-            } else {
+            } else if (status === HTTP_CONFLICT) {
                 helperElement.textContent = '*중복된 닉네임 입니다.';
+            } else {
+                helperElement.textContent =
+                    '*닉네임 확인 중 오류가 발생했습니다.';
             }
         }
 
