@@ -5,7 +5,7 @@ const BoardItem = (
     date,
     title,
     viewCount,
-    imgUrl,
+    profileImagePath,
     writer,
     commentCount,
     likeCount,
@@ -34,7 +34,7 @@ const BoardItem = (
     const formattedDate = `${year}-${padTo2Digits(month)}-${padTo2Digits(day)} ${padTo2Digits(hours)}:${padTo2Digits(minutes)}:${padTo2Digits(seconds)}`;
 
     const DEFAULT_PROFILE_IMAGE = '../public/image/profile/default.jpg';
-    const profileImageUrl = resolveImageUrl(imgUrl, DEFAULT_PROFILE_IMAGE);
+    const profileImageSrc = resolveImageUrl(profileImagePath, DEFAULT_PROFILE_IMAGE);
     // const API_HOST = getServerUrl();
 
     return `
@@ -49,7 +49,7 @@ const BoardItem = (
             </div>
             <div class="writerInfo">
             <picture class="img">
-                <img src="${`${profileImageUrl}`}" alt="img">
+                <img src="${`${profileImageSrc}`}" alt="img">
             </picture>
             <h2 class="writer">${writer}</h2>
         </div>

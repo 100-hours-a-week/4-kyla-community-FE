@@ -55,7 +55,7 @@ const setBoardItem = boardData => {
                     data.createdAt,
                     data.title,
                     data.viewCount,
-                    data.author ? data.author.profileImageUrl : null,
+                    data.author ? data.author.profileImagePath : null,
                     data.author ? data.author.nickname : null,
                     data.commentCount,
                     data.likeCount,
@@ -151,7 +151,7 @@ const addInfinityScrollEvent = () => {
     });
 };
 
-const getAuthenticatedProfileImageUrl = async () => {
+const getAuthenticatedProfileImagePath = async () => {
     try {
         const response = await serverSessionCheck();
         if (!response.ok) {
@@ -161,7 +161,7 @@ const getAuthenticatedProfileImageUrl = async () => {
 
         const body = await response.json();
         return resolveImageUrl(
-            body.data && body.data.profileImageUrl,
+            body.data && body.data.profileImagePath,
             DEFAULT_PROFILE_IMAGE,
         );
     } catch (error) {
@@ -171,12 +171,30 @@ const getAuthenticatedProfileImageUrl = async () => {
     }
 };
 
+const renderHeader = (profileImageSrc = null) => {
+    const header = Header('Community', 0, profileImageSrc, {
+        showLogin: true,
+    });
+    const currentHeader = document.querySelector('header');
+
+    if (currentHeader) {
+        currentHeader.replaceWith(header);
+        return;
+    }
+
+    prependChild(document.body, header);
+};
+
+const updateHeaderByAuthState = async () => {
+    const profileImageSrc = await getAuthenticatedProfileImagePath();
+    if (profileImageSrc) {
+        renderHeader(profileImageSrc);
+    }
+};
+
 const init = async () => {
-    const profileImageUrl = await getAuthenticatedProfileImageUrl();
-    prependChild(
-        document.body,
-        Header('Community', 0, profileImageUrl, { showLogin: true }),
-    );
+    renderHeader();
+    updateHeaderByAuthState();
 
     try {
         updateSortVisibility();

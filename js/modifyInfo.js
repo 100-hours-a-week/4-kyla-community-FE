@@ -3,11 +3,13 @@ import Dialog from '../component/dialog/dialog.js';
 import Header from '../component/header/header.js';
 import {
     authCheck,
+    clearAuthData,
     prependChild,
     getServerUrl,
     resolveImageUrl,
     validNickname,
 } from '../utils/function.js';
+import { userLogout } from '../api/loginRequest.js';
 import { userModify, userDelete } from '../api/modifyInfoRequest.js';
 import { requestJson } from '../utils/request.js';
 
@@ -24,9 +26,10 @@ const profilePreview = document.querySelector('#profilePreview');
 const removeProfileButton = document.querySelector('#removeProfileButton');
 const authDataReponse = await authCheck();
 const authData = await authDataReponse.json();
+const getProfileImagePath = data => data.profileImagePath;
 const changeData = {
     nickname: authData.data.nickname,
-    profileImageUrl: authData.data.profileImageUrl,
+    profileImagePath: getProfileImagePath(authData.data),
 };
 
 const DEFAULT_PROFILE_IMAGE = '../public/image/profile/default.jpg';
@@ -35,24 +38,24 @@ const HTTP_CREATED = 201;
 
 const setData = data => {
     if (
-        // data.profileImageUrl === DEFAULT_PROFILE_IMAGE ||
-        data.profileImageUrl === null
+        // getProfileImagePath(data) === DEFAULT_PROFILE_IMAGE ||
+        !getProfileImagePath(data)
     ) {
         profilePreview.src = DEFAULT_PROFILE_IMAGE;
         if (removeProfileButton) removeProfileButton.style.display = 'none';
     } else {
+        const profileImagePath = getProfileImagePath(data);
         profilePreview.src = resolveImageUrl(
-            data.profileImageUrl,
+            profileImagePath,
             DEFAULT_PROFILE_IMAGE,
         );
         if (removeProfileButton) removeProfileButton.style.display = 'flex';
 
-        const profileImageUrl = data.profileImageUrl;
-        const fileName = profileImageUrl.split('/').pop();
-        localStorage.setItem('profileImageUrl', data.profileImageUrl);
+        const fileName = profileImagePath.split('/').pop();
+        localStorage.setItem('profileImagePath', profileImagePath);
 
         const profileImage = new File(
-            [resolveImageUrl(profileImageUrl)],
+            [resolveImageUrl(profileImagePath)],
             fileName,
             { type: '' },
         );
@@ -69,7 +72,7 @@ const observeData = () => {
     const button = document.querySelector('#signupBtn');
     if (
         authData.data.nickname !== changeData.nickname ||
-        authData.data.profileImageUrl !== changeData.profileImageUrl
+        getProfileImagePath(authData.data) !== changeData.profileImagePath
     ) {
         button.disabled = false;
         button.style.backgroundColor = '#7F6AEE';
@@ -116,11 +119,11 @@ const changeEventHandler = async (event, uid) => {
     } else if (uid == 'profile') {
         // 사용자가 선택한 파일
         const file = event.target.files[0];
-        console.log(changeData.profileImageUrl);
+        console.log(changeData.profileImagePath);
         if (!file) {
-            localStorage.removeItem('profileImageUrl');
+            localStorage.removeItem('profileImagePath');
             profilePreview.src = DEFAULT_PROFILE_IMAGE;
-            changeData.profileImageUrl = null;
+            changeData.profileImagePath = '';
             if (removeProfileButton) removeProfileButton.style.display = 'none';
         } else {
             const formData = new FormData();
@@ -138,12 +141,12 @@ const changeEventHandler = async (event, uid) => {
 
                 if (!ok) throw new Error('서버 응답 오류');
                 localStorage.setItem(
-                    'profileImageUrl',
-                    data.profileImageUrl,
+                    'profileImagePath',
+                    data.filePath,
                 );
-                changeData.profileImageUrl = data.profileImageUrl;
+                changeData.profileImagePath = data.filePath;
                 profilePreview.src = resolveImageUrl(
-                    data.profileImageUrl,
+                    data.filePath,
                     DEFAULT_PROFILE_IMAGE,
                 );
                 if (removeProfileButton)
@@ -165,12 +168,12 @@ const sendModifyData = async () => {
         } else {
             const { status } = await userModify(changeData);
 
-            if (status === HTTP_CREATED) {
-                localStorage.removeItem('profileImageUrl');
+            if (status === HTTP_CREATED || status === HTTP_OK) {
+                localStorage.removeItem('profileImagePath');
                 saveToastMessage('수정완료');
                 location.href = '/html/modifyInfo.html';
             } else {
-                localStorage.removeItem('profileImageUrl');
+                localStorage.removeItem('profileImagePath');
                 saveToastMessage('수정실패');
                 location.href = '/html/modifyInfo.html';
             }
@@ -185,12 +188,11 @@ const deleteAccount = async () => {
 
         if (status === HTTP_OK) {
             try {
-                await requestJson(`${getServerUrl()}/v1/auth/logout`, {
-                    method: 'POST',
-                    credentials: 'include',
-                });
+                await userLogout();
             } catch (error) {
                 console.error('로그아웃 요청 실패:', error);
+            } finally {
+                clearAuthData();
             }
             location.href = '/html/login.html';
         } else {
@@ -214,9 +216,9 @@ const addEvent = () => {
     );
     if (removeProfileButton) {
         removeProfileButton.addEventListener('click', () => {
-            localStorage.removeItem('profileImageUrl');
+            localStorage.removeItem('profileImagePath');
             profilePreview.src = DEFAULT_PROFILE_IMAGE;
-            changeData.profileImageUrl = null;
+            changeData.profileImagePath = '';
             profileInputElement.value = '';
             removeProfileButton.style.display = 'none';
             observeData();
@@ -272,7 +274,7 @@ const displayToastFromStorage = () => {
 
 const init = () => {
     const profileImage =
-        resolveImageUrl(authData.data.profileImageUrl, DEFAULT_PROFILE_IMAGE);
+        resolveImageUrl(getProfileImagePath(authData.data), DEFAULT_PROFILE_IMAGE);
 
     prependChild(document.body, Header('커뮤니티', 2, profileImage));
     setData(authData.data);

@@ -30,6 +30,7 @@ export const fileUpload = formData => {
     const result = requestJson(getServerUrl() + '/v1/posts/upload/attach-file', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
     });
 
     return result;

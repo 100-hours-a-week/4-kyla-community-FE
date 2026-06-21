@@ -60,7 +60,7 @@ const setBoardDetail = data => {
     createdAtElement.textContent = formattedDate;
 
     imgElement.src = resolveImageUrl(
-        data.profileImage,
+        data.author ? data.author.profileImagePath : data.profileImagePath,
         DEFAULT_PROFILE_IMAGE,
     );
 
@@ -68,7 +68,10 @@ const setBoardDetail = data => {
 
     // 바디 정보
     const contentImgElement = document.querySelector('.contentImg');
-    const fileUrl = data.fileUrl || resolveImageUrl(data.filePath);
+    const postFilePath =
+        data.filePath ||
+        (data.files && data.files.length > 0 ? data.files[0].filePath : null);
+    const fileUrl = resolveImageUrl(postFilePath);
     if (fileUrl) {
         console.log(fileUrl);
         const img = document.createElement('img');
@@ -145,7 +148,8 @@ const setBoardDetail = data => {
 };
 
 const setBoardModify = async (data, myInfo) => {
-    if (myInfo.idx === data.writerId) {
+    const writerId = data.writerId || data.userId;
+    if (parseInt(myInfo.userId, 10) === parseInt(writerId, 10)) {
         const modifyElement = document.querySelector('.hidden');
         modifyElement.classList.remove('hidden');
 
@@ -250,7 +254,7 @@ const init = async () => {
             window.location.href = '/html/login.html';
         }
         const profileImage = resolveImageUrl(
-            myInfo.profileImageUrl,
+            myInfo.profileImagePath,
             DEFAULT_PROFILE_IMAGE,
         );
 

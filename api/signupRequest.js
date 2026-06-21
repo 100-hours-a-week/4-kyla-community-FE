@@ -43,9 +43,10 @@ export const checkNickname = async nickname => {
 
 export const fileUpload = async file => {
     const result = await requestJson(
-        `${getServerUrl()}/v1/users/me/profile-image`,
+        `${getServerUrl()}/v1/users/upload/profile-image`,
         {
             method: 'POST',
+            skipAuth: true,
             body: file,
         },
     );
