@@ -31,7 +31,13 @@ export const clearAuthData = () => {
 export const resolveImageUrl = (url, fallback = null) => {
     if (!url) return fallback;
     if (/^https?:\/\//i.test(url)) return url;
-    return `${getServerUrl()}${url}`;
+    const path = url.startsWith('/') ? url : `/${url}`;
+
+    if (path.startsWith('/uploads/')) {
+        return `${getServerUrl()}/v1${path}`;
+    }
+
+    return `${getServerUrl()}${path}`;
 };
 
 export const serverSessionCheck = async () => {
